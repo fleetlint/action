@@ -1,0 +1,49 @@
+name: fleetlint
+description: Check a repository's setup (hooks, task runner, lint config, CI, release) against its fleetlint rules.
+author: fleetlint
+branding:
+  icon: check-square
+  color: blue
+inputs:
+  version:
+    description: fleetlint release to install, such as v0.2.0, or "latest".
+    default: latest
+  path:
+    description: Repository root to check, relative to the workspace.
+    default: .
+  fail-on:
+    description: "Lowest severity that fails the step: error, warning, info or never."
+    default: error
+  annotations:
+    description: Annotate every finding on the run and, on pull requests, on the changed files.
+    default: "true"
+  summary:
+    description: Write the report into the job summary.
+    default: "true"
+  sarif-file:
+    description: Also write a SARIF report to this path, for github/codeql-action/upload-sarif.
+    default: ""
+  verify:
+    description: "How to verify the download: auto (cosign signature when cosign is on PATH, else checksum), cosign, or checksum."
+    default: auto
+outputs:
+  version:
+    description: The fleetlint version that ran.
+    value: ${{ steps.install.outputs.version }}
+runs:
+  using: composite
+  steps:
+    - id: install
+      shell: bash
+      env:
+        INPUT_VERSION: ${{ inputs.version }}
+        INPUT_VERIFY: ${{ inputs.verify }}
+      run: '"$GITHUB_ACTION_PATH/install.sh"'
+    - shell: bash
+      env:
+        INPUT_PATH: ${{ inputs.path }}
+        INPUT_FAIL_ON: ${{ inputs.fail-on }}
+        INPUT_ANNOTATIONS: ${{ inputs.annotations }}
+        INPUT_SUMMARY: ${{ inputs.summary }}
+        INPUT_SARIF_FILE: ${{ inputs.sarif-file }}
+      run: '"$GITHUB_ACTION_PATH/check.sh"'

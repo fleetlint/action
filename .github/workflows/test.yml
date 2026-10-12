@@ -1,0 +1,29 @@
+name: test
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  action:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: fleetlint
+        uses: ./
+        with:
+          fail-on: never
+          sarif-file: ${{ runner.temp }}/fleetlint.sarif
+      - name: The release ran and wrote SARIF
+        shell: bash
+        run: |
+          test -n "${{ steps.fleetlint.outputs.version }}"
+          test -s "$RUNNER_TEMP/fleetlint.sarif"
