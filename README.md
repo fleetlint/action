@@ -14,7 +14,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: fleetlint/action@v1
+      - uses: fleetlint/action@main   # no release yet: pin a commit SHA
         with:
           version: v0.2.0      # pin it; Renovate keeps it current
 ```
@@ -42,7 +42,7 @@ The output `version` is the release that ran.
     steps:
       - uses: actions/checkout@v7
       - uses: sigstore/cosign-installer@v4   # optional: verify the release signature
-      - uses: fleetlint/action@v1
+      - uses: fleetlint/action@main   # pin a commit SHA
         with:
           version: v0.2.0
           fail-on: never
@@ -54,8 +54,8 @@ The output `version` is the release that ran.
 
 ## Gitea and Forgejo
 
-The action is plain bash and `curl`, so it runs on Gitea and Forgejo runners as `uses: https://github.com/fleetlint/action@v1`. The runner needs `bash`, `curl`, `tar` (or `unzip` on Windows) and, for annotations, `jq`.
+The action is plain bash and `curl`, so it runs on Gitea and Forgejo runners as `uses: https://github.com/fleetlint/action@<commit SHA>`. The runner needs `bash`, `curl`, `tar` (or `unzip` on Windows) and, for annotations, `jq`.
 
 ## Releases
 
-Tags follow semantic versioning; `v1` moves to the latest `v1.x.y`.
+No release yet; until the first tag, pin a commit SHA. Tags will follow semantic versioning.
