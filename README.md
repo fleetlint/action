@@ -23,6 +23,8 @@ jobs:
 
 | Input | Default | |
 |---|---|---|
+| `mode` | `check` | `check`: check, annotate and gate; `pr`: propose changes as a pull request (below) |
+| `token` | `${{ github.token }}` | the token `mode: pr` opens the pull request and pushes with |
 | `version` | `latest` | fleetlint release to install, such as `v0.2.0` |
 | `path` | `.` | repository root to check, relative to the workspace |
 | `fail-on` | `error` | lowest severity that fails the step: `error`, `warning`, `info`, `never` |
@@ -51,6 +53,37 @@ The output `version` is the release that ran.
         with:
           sarif_file: fleetlint.sarif
 ```
+
+## Pull requests
+
+`mode: pr` proposes changes as a pull request on the repository the workflow runs in, with the run's own token. A repository without a `.fleetlint.yaml` gets the onboarding pull request (`fleetlint init --pr`: the configuration, with the report as its description); one that has it gets the mechanical fixes of its default branch (`fleetlint fix --apply --pr`: committed on `fleetlint/fixes`, the open pull request updated on every run). The working tree of the job is not changed, so it does not matter that the default branch is protected.
+
+```yaml
+name: fleetlint fixes
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  fleetlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false   # fleetlint pushes with the token itself
+      - uses: fleetlint/action@main   # pin a commit SHA
+        with:
+          mode: pr
+```
+
+- On GitHub, *Allow GitHub Actions to create and approve pull requests* must be on (repository or organization settings, Actions, General).
+- A pull request opened with the run's `GITHUB_TOKEN` starts no workflows, so its checks do not run until someone pushes to it. Pass a token of a GitHub App (`actions/create-github-app-token`) or a fine-grained token with *contents* and *pull requests* write access as `token:` when the checks should run.
+- The commit is authored by `github-actions[bot]` unless the job sets `GIT_AUTHOR_NAME` and `GIT_AUTHOR_EMAIL`.
+- In Gitea and Forgejo Actions the same step works: fleetlint takes the instance and its API from the job (`GITHUB_SERVER_URL`, `GITHUB_API_URL`), and `github.token` is the instance's token.
+- `mode: pr` needs a fleetlint release with `fix --pr` (after 0.8.1).
 
 ## Gitea and Forgejo
 

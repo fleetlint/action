@@ -27,3 +27,11 @@ jobs:
         run: |
           test -n "${{ steps.fleetlint.outputs.version }}"
           test -s "$RUNNER_TEMP/fleetlint.sarif"
+      - name: mode pr refuses to run without a token
+        shell: bash
+        env:
+          INPUT_PATH: .
+          FLEETLINT_TOKEN: ""
+        run: |
+          if ./pr.sh >"$RUNNER_TEMP/pr.log" 2>&1; then exit 1; fi
+          grep -q "needs a token" "$RUNNER_TEMP/pr.log"

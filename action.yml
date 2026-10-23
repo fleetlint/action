@@ -5,6 +5,12 @@ branding:
   icon: check-square
   color: blue
 inputs:
+  mode:
+    description: "check: check, annotate and gate. pr: open (or update) a pull request with the run's token: the onboarding configuration when the repository has none, else the mechanical fixes."
+    default: check
+  token:
+    description: "Token for mode pr. The run's own token needs contents: write and pull-requests: write; pull requests it opens do not start workflows, a GitHub App or fine-grained token does."
+    default: ${{ github.token }}
   version:
     description: fleetlint release to install, such as v0.2.0, or "latest".
     default: latest
@@ -39,7 +45,14 @@ runs:
         INPUT_VERSION: ${{ inputs.version }}
         INPUT_VERIFY: ${{ inputs.verify }}
       run: '"$GITHUB_ACTION_PATH/install.sh"'
-    - shell: bash
+    - if: inputs.mode == 'pr'
+      shell: bash
+      env:
+        INPUT_PATH: ${{ inputs.path }}
+        FLEETLINT_TOKEN: ${{ inputs.token }}
+      run: '"$GITHUB_ACTION_PATH/pr.sh"'
+    - if: inputs.mode != 'pr'
+      shell: bash
       env:
         INPUT_PATH: ${{ inputs.path }}
         INPUT_FAIL_ON: ${{ inputs.fail-on }}
