@@ -35,3 +35,16 @@ jobs:
         run: |
           if ./pr.sh >"$RUNNER_TEMP/pr.log" 2>&1; then exit 1; fi
           grep -q "needs a token" "$RUNNER_TEMP/pr.log"
+      - name: annotations auto annotate on GitHub only
+        shell: bash
+        env:
+          INPUT_PATH: .
+          INPUT_FAIL_ON: never
+          INPUT_ANNOTATIONS: auto
+          INPUT_SUMMARY: "false"
+          INPUT_SARIF_FILE: ""
+        run: |
+          ./check.sh >"$RUNNER_TEMP/github.log"
+          grep -q '^::' "$RUNNER_TEMP/github.log"
+          FORGEJO_ACTIONS=true ./check.sh >"$RUNNER_TEMP/forgejo.log"
+          if grep -q '^::' "$RUNNER_TEMP/forgejo.log"; then exit 1; fi

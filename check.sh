@@ -5,7 +5,15 @@ set -euo pipefail
 report="$RUNNER_TEMP/fleetlint.json"
 fleetlint -C "$INPUT_PATH" check --format json --fail-on never >"$report"
 
-if [ "$INPUT_ANNOTATIONS" = true ]; then
+annotations=$INPUT_ANNOTATIONS
+if [ "$annotations" = auto ]; then
+  # Gitea and Forgejo print workflow commands into the log instead of annotating.
+  annotations=true
+  if [ "${GITEA_ACTIONS:-}" = true ] || [ "${FORGEJO_ACTIONS:-}" = true ]; then
+    annotations=false
+  fi
+fi
+if [ "$annotations" = true ]; then
   if command -v jq >/dev/null; then
     prefix=""
     [ "$INPUT_PATH" != . ] && prefix="${INPUT_PATH%/}/"

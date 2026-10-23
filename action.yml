@@ -21,8 +21,8 @@ inputs:
     description: "Lowest severity that fails the step: error, warning, info or never."
     default: error
   annotations:
-    description: Annotate every finding on the run and, on pull requests, on the changed files.
-    default: "true"
+    description: "Annotate every finding on the run and, on pull requests, on the changed files: true, false, or auto (on GitHub only; Gitea and Forgejo do not show annotations)."
+    default: auto
   summary:
     description: Write the report into the job summary.
     default: "true"

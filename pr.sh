@@ -7,9 +7,16 @@ if [ -z "${FLEETLINT_TOKEN:-}" ]; then
   echo "::error::mode: pr needs a token (the token input, by default the run's github.token)"
   exit 1
 fi
-# The commit is the workflow's, as actions/checkout pushes it.
-export GIT_AUTHOR_NAME="${GIT_AUTHOR_NAME:-github-actions[bot]}"
-export GIT_AUTHOR_EMAIL="${GIT_AUTHOR_EMAIL:-41898282+github-actions[bot]@users.noreply.github.com}"
+# The commit is the workflow's: the forge's own Actions user.
+if [ "${FORGEJO_ACTIONS:-}" = true ]; then
+  name=forgejo-actions email=noreply@forgejo.org
+elif [ "${GITEA_ACTIONS:-}" = true ]; then
+  name=gitea-actions email=teabot@gitea.io
+else
+  name="github-actions[bot]" email="41898282+github-actions[bot]@users.noreply.github.com"
+fi
+export GIT_AUTHOR_NAME="${GIT_AUTHOR_NAME:-$name}"
+export GIT_AUTHOR_EMAIL="${GIT_AUTHOR_EMAIL:-$email}"
 export GIT_COMMITTER_NAME="${GIT_COMMITTER_NAME:-$GIT_AUTHOR_NAME}"
 export GIT_COMMITTER_EMAIL="${GIT_COMMITTER_EMAIL:-$GIT_AUTHOR_EMAIL}"
 
