@@ -27,14 +27,28 @@ jobs:
         run: |
           test -n "${{ steps.fleetlint.outputs.version }}"
           test -s "$RUNNER_TEMP/fleetlint.sarif"
-      - name: mode pr refuses to run without a token
+      - name: pr refuses to run without a token, and pull requests only check
         shell: bash
         env:
           INPUT_PATH: .
+          INPUT_REF: main
+          INPUT_DEFAULT_BRANCH: main
           FLEETLINT_TOKEN: ""
         run: |
-          if ./pr.sh >"$RUNNER_TEMP/pr.log" 2>&1; then exit 1; fi
+          if INPUT_EVENT=push ./pr.sh >"$RUNNER_TEMP/pr.log" 2>&1; then exit 1; fi
           grep -q "needs a token" "$RUNNER_TEMP/pr.log"
+          INPUT_EVENT=pull_request ./pr.sh | grep -q "only checks"
+          INPUT_EVENT=push INPUT_REF=feature ./pr.sh | grep -q "only runs of main"
+      - name: an onboarding run is not gated
+        shell: bash
+        env:
+          INPUT_PATH: .
+          INPUT_FAIL_ON: info
+          INPUT_ANNOTATIONS: "false"
+          INPUT_SUMMARY: "false"
+          INPUT_SARIF_FILE: ""
+          INPUT_GATE: "false"
+        run: ./check.sh | grep -q "not gated"
       - name: annotations auto annotate on GitHub only
         shell: bash
         env:

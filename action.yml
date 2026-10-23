@@ -5,11 +5,11 @@ branding:
   icon: check-square
   color: blue
 inputs:
-  mode:
-    description: "check: check, annotate and gate. pr: open (or update) a pull request with the run's token: the onboarding configuration when the repository has none, else the mechanical fixes."
-    default: check
+  pr:
+    description: "On runs of the default branch (not pull requests), also open or update a pull request: the onboarding configuration when the repository has none (that run is not gated), else the mechanical fixes."
+    default: "false"
   token:
-    description: "Token for mode pr. The run's own token needs contents: write and pull-requests: write; pull requests it opens do not start workflows, a GitHub App or fine-grained token does."
+    description: "Token for pr. The run's own token needs contents: write and pull-requests: write; pull requests it opens do not start workflows, a GitHub App or fine-grained token does."
     default: ${{ github.token }}
   version:
     description: fleetlint release to install, such as v0.2.0, or "latest".
@@ -45,15 +45,19 @@ runs:
         INPUT_VERSION: ${{ inputs.version }}
         INPUT_VERIFY: ${{ inputs.verify }}
       run: '"$GITHUB_ACTION_PATH/install.sh"'
-    - if: inputs.mode == 'pr'
+    - id: pr
+      if: inputs.pr == 'true'
       shell: bash
       env:
         INPUT_PATH: ${{ inputs.path }}
+        INPUT_EVENT: ${{ github.event_name }}
+        INPUT_REF: ${{ github.ref_name }}
+        INPUT_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         FLEETLINT_TOKEN: ${{ inputs.token }}
       run: '"$GITHUB_ACTION_PATH/pr.sh"'
-    - if: inputs.mode != 'pr'
-      shell: bash
+    - shell: bash
       env:
+        INPUT_GATE: ${{ steps.pr.outputs.onboarding != 'true' }}
         INPUT_PATH: ${{ inputs.path }}
         INPUT_FAIL_ON: ${{ inputs.fail-on }}
         INPUT_ANNOTATIONS: ${{ inputs.annotations }}

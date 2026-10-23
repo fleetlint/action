@@ -23,8 +23,8 @@ jobs:
 
 | Input | Default | |
 |---|---|---|
-| `mode` | `check` | `check`: check, annotate and gate; `pr`: propose changes as a pull request (below) |
-| `token` | `${{ github.token }}` | the token `mode: pr` opens the pull request and pushes with |
+| `pr` | `false` | on runs of the default branch, also propose changes as a pull request (below) |
+| `token` | `${{ github.token }}` | the token `pr` opens the pull request and pushes with |
 | `version` | `latest` | fleetlint release to install, such as `v0.2.0` |
 | `path` | `.` | repository root to check, relative to the workspace |
 | `fail-on` | `error` | lowest severity that fails the step: `error`, `warning`, `info`, `never` |
@@ -56,14 +56,20 @@ The output `version` is the release that ran.
 
 ## Pull requests
 
-`mode: pr` proposes changes as a pull request on the repository the workflow runs in, with the run's own token. A repository without a `.fleetlint.yaml` gets the onboarding pull request (`fleetlint init --pr`: the configuration, with the report as its description); one that has it gets the mechanical fixes of its default branch (`fleetlint fix --apply --pr`: committed on `fleetlint/fixes`, the open pull request updated on every run). The working tree of the job is not changed, so it does not matter that the default branch is protected.
+Every run checks. With `pr: true`, a run of the default branch also proposes changes as a pull request on the repository the workflow runs in, with the run's own token:
+
+- A repository without a `.fleetlint.yaml` gets the onboarding pull request (`fleetlint init --pr`: the configuration, with the report as its description). That run is not gated: the repository has not adopted a configuration yet.
+- One that has it gets the mechanical fixes of its default branch (`fleetlint fix --apply --pr`: committed on `fleetlint/fixes`, the open pull request updated on every run), and the run is gated as usual.
+
+Runs of pull requests and of other branches only check, so one workflow serves both. The working tree of the job is not changed, so it does not matter that the default branch is protected. A schedule keeps the fixes pull request current between pushes.
 
 ```yaml
-name: fleetlint fixes
+name: fleetlint
 on:
+  push:
+  pull_request:
   schedule:
     - cron: "0 6 * * 1"
-  workflow_dispatch:
 permissions:
   contents: write
   pull-requests: write
@@ -76,14 +82,14 @@ jobs:
           persist-credentials: false   # fleetlint pushes with the token itself
       - uses: fleetlint/action@main   # pin a commit SHA
         with:
-          mode: pr
+          pr: true
 ```
 
 - On GitHub, *Allow GitHub Actions to create and approve pull requests* must be on (repository or organization settings, Actions, General).
 - A pull request opened with the run's `GITHUB_TOKEN` starts no workflows, so its checks do not run until someone pushes to it. Pass a token of a GitHub App (`actions/create-github-app-token`) or a fine-grained token with *contents* and *pull requests* write access as `token:` when the checks should run.
 - The commit is authored by `github-actions[bot]` unless the job sets `GIT_AUTHOR_NAME` and `GIT_AUTHOR_EMAIL`.
 - In Gitea and Forgejo Actions the same step works: fleetlint takes the instance and its API from the job (`GITHUB_SERVER_URL`, `GITHUB_API_URL`), `github.token` is the instance's token, and the commit is authored by the instance's Actions user (`forgejo-actions` or `gitea-actions`).
-- `mode: pr` needs a fleetlint release with `fix --pr` (after 0.8.1).
+- `pr` needs a fleetlint release with `fix --pr` (after 0.8.1).
 
 ## Gitea and Forgejo
 
@@ -107,7 +113,7 @@ jobs:
 - The runner needs `bash`, `curl` and `tar`.
 - The report goes into the job summary, which Forgejo shows from v17 with runner v13.2. Annotations are off (`annotations: auto`): neither forge shows them.
 - There is no code scanning, so leave `sarif-file` empty.
-- `mode: pr` works with the job's own token. On Forgejo 17 it can push and open pull requests on the repository it runs in without further settings.
+- `pr` works with the job's own token. On Forgejo 17 it can push and open pull requests on the repository it runs in without further settings.
 
 Tested on Forgejo 17.0 with runner 13.2 (check, job summary, the onboarding and the fixes pull request, and a second run updating it). Gitea runs the same commands but is not tested.
 

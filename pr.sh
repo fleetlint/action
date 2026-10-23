@@ -1,10 +1,21 @@
 #!/usr/bin/env bash
 # Proposes changes as a pull request with the run's token: the onboarding
 # configuration when the repository has none, else the mechanical fixes.
+# Runs of pull requests and of other branches only check.
 set -euo pipefail
 
+case "$INPUT_EVENT" in
+  pull_request*)
+    echo "pr: a pull request run only checks"
+    exit 0
+    ;;
+esac
+if [ -n "$INPUT_DEFAULT_BRANCH" ] && [ "$INPUT_REF" != "$INPUT_DEFAULT_BRANCH" ]; then
+  echo "pr: only runs of $INPUT_DEFAULT_BRANCH propose changes"
+  exit 0
+fi
 if [ -z "${FLEETLINT_TOKEN:-}" ]; then
-  echo "::error::mode: pr needs a token (the token input, by default the run's github.token)"
+  echo "::error::pr: true needs a token (the token input, by default the run's github.token)"
   exit 1
 fi
 # The commit is the workflow's: the forge's own Actions user.
@@ -24,4 +35,5 @@ if [ -f "$INPUT_PATH/.fleetlint.yaml" ] || [ -f "$INPUT_PATH/fleetlint.yaml" ]; 
   fleetlint -C "$INPUT_PATH" fix --apply --pr | tee -a "${GITHUB_STEP_SUMMARY:-/dev/null}"
 else
   fleetlint -C "$INPUT_PATH" init --pr | tee -a "${GITHUB_STEP_SUMMARY:-/dev/null}"
+  echo "onboarding=true" >>"${GITHUB_OUTPUT:-/dev/null}"
 fi

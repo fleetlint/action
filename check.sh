@@ -40,4 +40,8 @@ if [ -n "$INPUT_SARIF_FILE" ]; then
   fleetlint -C "$INPUT_PATH" check --format sarif --fail-on never >"$INPUT_SARIF_FILE"
 fi
 
+if [ "${INPUT_GATE:-true}" = false ]; then
+  echo "not gated: the onboarding pull request proposes the configuration"
+  exit 0
+fi
 fleetlint -C "$INPUT_PATH" check --fail-on "$INPUT_FAIL_ON" --color=false
