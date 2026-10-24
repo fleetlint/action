@@ -14,9 +14,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: fleetlint/action@main   # no release yet: pin a commit SHA
-        with:
-          version: v0.2.0      # pin it; Renovate keeps it current
+      - uses: fleetlint/action@v0.1.0   # or its commit SHA; Renovate keeps it current
 ```
 
 ## Inputs
@@ -25,7 +23,7 @@ jobs:
 |---|---|---|
 | `pr` | `false` | on runs of the default branch, also propose changes as a pull request (below) |
 | `token` | `${{ github.token }}` | the token `pr` opens the pull request and pushes with |
-| `version` | `latest` | fleetlint release to install, such as `v0.2.0` |
+| `version` | `v0.9.0` | fleetlint release to install, such as `v0.9.0`, or `latest`; the default is the release this version of the action was tested with |
 | `path` | `.` | repository root to check, relative to the workspace |
 | `fail-on` | `error` | lowest severity that fails the step: `error`, `warning`, `info`, `never` |
 | `annotations` | `auto` | one annotation per finding, on the file and line when the finding has them (needs `jq`, which GitHub's runners have); `auto` is on for GitHub and off for Gitea and Forgejo, which print workflow commands into the log instead |
@@ -44,9 +42,8 @@ The output `version` is the release that ran.
     steps:
       - uses: actions/checkout@v7
       - uses: sigstore/cosign-installer@v4   # optional: verify the release signature
-      - uses: fleetlint/action@main   # pin a commit SHA
+      - uses: fleetlint/action@v0.1.0
         with:
-          version: v0.2.0
           fail-on: never
           sarif-file: fleetlint.sarif
       - uses: github/codeql-action/upload-sarif@v4
@@ -80,7 +77,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false   # fleetlint pushes with the token itself
-      - uses: fleetlint/action@main   # pin a commit SHA
+      - uses: fleetlint/action@v0.1.0
         with:
           pr: true
 ```
@@ -89,7 +86,7 @@ jobs:
 - A pull request opened with the run's `GITHUB_TOKEN` starts no workflows, so its checks do not run until someone pushes to it. Pass a token of a GitHub App (`actions/create-github-app-token`) or a fine-grained token with *contents* and *pull requests* write access as `token:` when the checks should run.
 - The commit is authored by `github-actions[bot]` unless the job sets `GIT_AUTHOR_NAME` and `GIT_AUTHOR_EMAIL`.
 - In Gitea and Forgejo Actions the same step works: fleetlint takes the instance and its API from the job (`GITHUB_SERVER_URL`, `GITHUB_API_URL`), `github.token` is the instance's token, and the commit is authored by the instance's Actions user (`forgejo-actions` or `gitea-actions`).
-- `pr` needs a fleetlint release with `fix --pr` (after 0.8.1).
+- `pr` needs fleetlint 0.9.0 or newer.
 
 ## Gitea and Forgejo
 
@@ -105,9 +102,7 @@ jobs:
       - uses: https://data.forgejo.org/actions/checkout@v4
         with:
           persist-credentials: false
-      - uses: https://github.com/fleetlint/action@<commit SHA>
-        with:
-          version: v0.2.0
+      - uses: https://github.com/fleetlint/action@v0.1.0
 ```
 
 - The runner needs `bash`, `curl` and `tar`.
@@ -119,4 +114,8 @@ Tested on Forgejo 17.0 with runner 13.2 (check, job summary, the onboarding and 
 
 ## Releases
 
-No release yet; until the first tag, pin a commit SHA. Tags will follow semantic versioning.
+The action has its own versions (semantic versioning, [CHANGELOG.md](CHANGELOG.md)), independent of fleetlint's. Each pins a fleetlint release as the `version` default; Renovate bumps it, and a release of the action follows. Pin the action by tag or commit SHA and override `version` to run another fleetlint release. Tags and releases are immutable.
+
+| Action | Installs by default | Needs |
+|---|---|---|
+| v0.1.0 | fleetlint v0.9.0 | `pr`: fleetlint 0.9.0 or newer |
