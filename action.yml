@@ -12,8 +12,8 @@ inputs:
     description: "Token for pr. The run's own token needs contents: write and pull-requests: write; pull requests it opens do not start workflows, a GitHub App or fine-grained token does."
     default: ${{ github.token }}
   version:
-    description: fleetlint release to install, such as v0.9.0, or "latest"; pr needs v0.9.0 or newer.
-    default: v0.9.0
+    description: fleetlint release to install, such as v0.10.0, or "latest"; pr needs v0.9.0 or newer.
+    default: v0.10.0
   path:
     description: Repository root to check, relative to the workspace.
     default: .
