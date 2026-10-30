@@ -14,7 +14,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: fleetlint/action@v0.1.0   # or its commit SHA; Renovate keeps it current
+      - uses: fleetlint/action@v0.1.1   # or its commit SHA; Renovate keeps it current
 ```
 
 ## Inputs
@@ -23,7 +23,7 @@ jobs:
 |---|---|---|
 | `pr` | `false` | on runs of the default branch, also propose changes as a pull request (below) |
 | `token` | `${{ github.token }}` | the token `pr` opens the pull request and pushes with |
-| `version` | `v0.9.0` | fleetlint release to install, such as `v0.9.0`, or `latest`; the default is the release this version of the action was tested with |
+| `version` | `v0.10.0` | fleetlint release to install, such as `v0.9.0`, or `latest`; the default is the release this version of the action was tested with |
 | `path` | `.` | repository root to check, relative to the workspace |
 | `fail-on` | `error` | lowest severity that fails the step: `error`, `warning`, `info`, `never` |
 | `annotations` | `auto` | one annotation per finding, on the file and line when the finding has them (needs `jq`, which GitHub's runners have); `auto` is on for GitHub and off for Gitea and Forgejo, which print workflow commands into the log instead |
@@ -42,7 +42,7 @@ The output `version` is the release that ran.
     steps:
       - uses: actions/checkout@v7
       - uses: sigstore/cosign-installer@v4   # optional: verify the release signature
-      - uses: fleetlint/action@v0.1.0
+      - uses: fleetlint/action@v0.1.1
         with:
           fail-on: never
           sarif-file: fleetlint.sarif
@@ -77,7 +77,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false   # fleetlint pushes with the token itself
-      - uses: fleetlint/action@v0.1.0
+      - uses: fleetlint/action@v0.1.1
         with:
           pr: true
 ```
@@ -102,7 +102,7 @@ jobs:
       - uses: https://data.forgejo.org/actions/checkout@v4
         with:
           persist-credentials: false
-      - uses: https://github.com/fleetlint/action@v0.1.0
+      - uses: https://github.com/fleetlint/action@v0.1.1
 ```
 
 - The runner needs `bash`, `curl` and `tar`.
@@ -118,4 +118,5 @@ The action has its own versions (semantic versioning, [CHANGELOG.md](CHANGELOG.m
 
 | Action | Installs by default | Needs |
 |---|---|---|
+| v0.1.1 | fleetlint v0.10.0 | `pr`: fleetlint 0.9.0 or newer |
 | v0.1.0 | fleetlint v0.9.0 | `pr`: fleetlint 0.9.0 or newer |
